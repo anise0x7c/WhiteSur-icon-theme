@@ -9,7 +9,7 @@ Icon theme repo (macOS Big Sur style SVGs for Linux). No build system, tests, li
 - Uninstall: `./install.sh -r`
 - Syntax-check after editing scripts: `bash -n install.sh`
 - Check `links/` + `src/` symlinks (simulates install-time overlay; exit 1 on broken): `./scan-dead-links.sh`. `./scan-dead-links.sh -d DIR` does a plain dangling check on an installed theme.
-- Requires `gtk-update-icon-cache` on PATH — `set -e` aborts the whole install without it.
+- Icon-cache step: `gtk-update-icon-cache` → falls back to `gtk4-update-icon-cache` → else warns and continues; never aborts mid-install.
 
 ## How install.sh works (non-obvious)
 
