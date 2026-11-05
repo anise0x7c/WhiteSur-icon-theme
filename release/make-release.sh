@@ -1,6 +1,8 @@
 #! /bin/bash
 
-THEME_DIR=$(cd $(dirname $0) && pwd)
+set -eo pipefail
+
+THEME_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 THEME_NAME=WhiteSur
 
@@ -30,7 +32,7 @@ for theme in "${_THEME_VARIANTS[@]}"; do
 done
 }
 
-cd .. && ./install.sh -d $THEME_DIR -t all
+cd .. && ./install.sh -d "$THEME_DIR" -t all
 
-cd $THEME_DIR && Tar_themes && Clear_theme
+cd "$THEME_DIR" && Tar_themes && Clear_theme
 

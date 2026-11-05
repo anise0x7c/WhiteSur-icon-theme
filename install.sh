@@ -19,7 +19,6 @@ COLOR_VARIANTS=('' '-light' '-dark')
 THEME_VARIANTS=('' '-purple' '-pink' '-red' '-orange' '-yellow' '-green' '-grey' '-nord')
 
 themes=()
-colors=()
 
 usage() {
 cat << EOF
@@ -40,6 +39,20 @@ cat << EOF
 EOF
 }
 
+update_icon_cache() {
+  local theme_dir=${1}
+
+  if command -v gtk-update-icon-cache > /dev/null 2>&1 && gtk-update-icon-cache "${theme_dir}"; then
+    return 0
+  fi
+
+  if command -v gtk4-update-icon-cache > /dev/null 2>&1 && gtk4-update-icon-cache "${theme_dir}"; then
+    return 0
+  fi
+
+  echo "WARNING: icon cache not updated for '${theme_dir}' (gtk-update-icon-cache/gtk4-update-icon-cache unavailable or failed)." >&2
+}
+
 install() {
   local dest=${1}
   local name=${2}
@@ -53,7 +66,6 @@ install() {
   echo "Installing '${THEME_DIR}'..."
 
   mkdir -p                                                                                   "${THEME_DIR}"
-#  cp -r "${SRC_DIR}"/{COPYING,AUTHORS}                                                       "${THEME_DIR}"
   cp -r "${SRC_DIR}"/src/index.theme                                                         "${THEME_DIR}"
 
   #cd "${THEME_DIR}"
@@ -63,10 +75,6 @@ install() {
     mkdir -p                                                                                 "${THEME_DIR}"/status
     cp -r "${SRC_DIR}"/src/{actions,animations,apps,categories,devices,emotes,emblems,mimes,places,preferences} "${THEME_DIR}"
     cp -r "${SRC_DIR}"/src/status/{16,22,24,32,symbolic}                                     "${THEME_DIR}"/status
-
-    if [[ ${black:-} == 'true' ]]; then
-      sed -i "s/#f2f2f2/#363636/g" "${THEME_DIR}"/status/{16,22,24}/*
-    fi
 
     if [[ ${bold:-} == 'true' ]]; then
       cp -r "${SRC_DIR}"/bold/*                                                              "${THEME_DIR}"
@@ -88,7 +96,8 @@ install() {
       cp -r "${SRC_DIR}"/colors/color${theme}/*.svg                                          "${THEME_DIR}"/places/scalable
     fi
 
-    rm -rf "${THEME_DIR}"/places/scalable/user-trash{'','-full'}-dark.svg
+    rm -f "${THEME_DIR}"/places/scalable/user-trash-dark.svg \
+          "${THEME_DIR}"/places/scalable/user-trash-full-dark.svg
 
     cp -r "${SRC_DIR}"/links/{actions,apps,categories,devices,emotes,emblems,mimes,places,status,preferences} "${THEME_DIR}"
   fi
@@ -105,7 +114,7 @@ install() {
     sed -i "s/#f2f2f2/#363636/g" "${THEME_DIR}"/status/{16,22,24,32}/*
     cp -r "${SRC_DIR}"/links/status/{16,22,24,32}                                            "${THEME_DIR}"/status
 
-    cd ${dest}
+    cd "${dest}"
     ln -s ../${name}${theme}/actions ${name}${theme}-light/actions
     ln -s ../${name}${theme}/animations ${name}${theme}-light/animations
     ln -s ../${name}${theme}/apps ${name}${theme}-light/apps
@@ -174,7 +183,7 @@ install() {
     cp -r "${SRC_DIR}"/links/mimes/symbolic                                                  "${THEME_DIR}"/mimes
     cp -r "${SRC_DIR}"/links/status/symbolic                                                 "${THEME_DIR}"/status
 
-    cd ${dest}
+    cd "${dest}"
     ln -s ../${name}${theme}/animations ${name}${theme}-dark/animations
     ln -s ../${name}${theme}/emotes ${name}${theme}-dark/emotes
     ln -s ../${name}${theme}/preferences ${name}${theme}-dark/preferences
@@ -208,7 +217,7 @@ install() {
     ln -sf status status@2x
   )
 
-  gtk-update-icon-cache "${THEME_DIR}"
+  update_icon_cache "${THEME_DIR}"
 }
 
 uninstall() {
@@ -326,13 +335,9 @@ if [[ "${#themes[@]}" -eq 0 ]]; then
   themes=("${THEME_VARIANTS[0]}")
 fi
 
-if [[ "${#colors[@]}" -eq 0 ]]; then
-  colors=("${COLOR_VARIANTS[@]}")
-fi
-
 install_theme() {
   for theme in "${themes[@]}"; do
-    for color in "${colors[@]}"; do
+    for color in "${COLOR_VARIANTS[@]}"; do
       install "${dest:-${DEST_DIR}}" "${name:-${THEME_NAME}}" "${theme}" "${color}"
     done
   done
@@ -351,5 +356,3 @@ if [[ "${remove}" == 'true' ]]; then
 else
   install_theme
 fi
-
-#exit 0
